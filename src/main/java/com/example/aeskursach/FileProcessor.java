@@ -16,41 +16,29 @@ public class FileProcessor {
     }
 
     public void processFile(File file, boolean isEncryption, AESUtil aesUtil, String algorithm, SecretKey key, IvParameterSpec iv) throws Exception {
-        byte[] fileData;
-        ByteArrayOutputStream resultStream = new ByteArrayOutputStream();
+        byte[] fileData = readFile(file);
+        int partSize = 1024 * 1024; // 1 MB
 
-        if (isEncryption) {
-            fileData = readFile(file);
-            resultStream.write(iv.getIV());
-        } else {
-            // При расшифровании читаем IV из файла
-            byte[] fileContent = readFile(file);
-            byte[] ivBytes = new byte[16];
-            System.arraycopy(fileContent, 0, ivBytes, 0, 16);
-            iv = new IvParameterSpec(ivBytes);
-            fileData = new byte[fileContent.length - 16];
-            System.arraycopy(fileContent, 16, fileData, 0, fileData.length);
-        }
-
-        int blockSize = 16; // Размер блока для шифрования AES
         List<Future<byte[]>> futures = new ArrayList<>();
 
-        for (int i = 0; i < fileData.length; i += blockSize) {
-            int end = Math.min(fileData.length, i + blockSize);
-            byte[] block = new byte[end - i];
-            System.arraycopy(fileData, i, block, 0, end - i);
+        // Разбиваем данные на части и запускаем обработку в нескольких потоках
+        for (int i = 0; i < fileData.length; i += partSize) {
+            int end = Math.min(fileData.length, i + partSize);
+            byte[] part = new byte[end - i];
+            System.arraycopy(fileData, i, part, 0, end - i);
 
-            IvParameterSpec finalIv = iv;
             Callable<byte[]> task = () -> {
                 if (isEncryption) {
-                    return aesUtil.encrypt(block, key, finalIv, algorithm);
+                    return aesUtil.encrypt(part, key, iv, algorithm);
                 } else {
-                    return aesUtil.decrypt(block, key, finalIv, algorithm);
+                    return aesUtil.decrypt(part, key, iv, algorithm);
                 }
             };
             futures.add(executor.submit(task));
         }
 
+        // Собираем результаты
+        ByteArrayOutputStream resultStream = new ByteArrayOutputStream();
         for (Future<byte[]> future : futures) {
             resultStream.write(future.get());
         }

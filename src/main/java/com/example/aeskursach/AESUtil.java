@@ -5,11 +5,10 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Base64;
 
@@ -23,14 +22,14 @@ public class AESUtil {
         return keyGenerator.generateKey();
     }
 
-    public static SecretKey getKeyFromPassword(String password, String salt) throws Exception {
-        byte[] key = (password + salt).getBytes();
+    public static SecretKey getKeyFromPassword(String password, String salt) {
+        byte[] key = (password + salt).getBytes(StandardCharsets.UTF_8);
         return new SecretKeySpec(key, 0, 16, ALGORITHM);
     }
 
     public static IvParameterSpec generateIv() {
         byte[] iv = new byte[16];
-        new java.security.SecureRandom().nextBytes(iv);
+        new SecureRandom().nextBytes(iv);
         return new IvParameterSpec(iv);
     }
 
@@ -47,21 +46,29 @@ public class AESUtil {
     }
 
     public String encrypt(String input, SecretKey key, AlgorithmParameterSpec iv, String algorithm) throws Exception {
-        byte[] cipherText = encrypt(input.getBytes(), key, iv, algorithm);
+        byte[] inputBytes = input.getBytes(StandardCharsets.UTF_8);
+        byte[] cipherText = encrypt(inputBytes, key, iv, algorithm);
         return Base64.getEncoder().encodeToString(cipherText);
     }
 
     public String decrypt(String cipherText, SecretKey key, AlgorithmParameterSpec iv, String algorithm) throws Exception {
-        byte[] plainText = decrypt(Base64.getDecoder().decode(cipherText), key, iv, algorithm);
-        return new String(plainText);
+        byte[] cipherBytes = Base64.getDecoder().decode(cipherText);
+        byte[] plainText = decrypt(cipherBytes, key, iv, algorithm);
+        return new String(plainText, StandardCharsets.UTF_8);
     }
 
+    // Метод для сохранения IV в файл
+    public static void saveIvToFile(IvParameterSpec iv, File file) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(iv.getIV());
+        }
+    }
+
+    // Метод для извлечения IV из файла
     public static IvParameterSpec getIvFromFile(File file) throws IOException {
         byte[] iv = new byte[16];
-        try (InputStream inputStream = new FileInputStream(file)) {
-            if (inputStream.read(iv) != 16) {
-                throw new IOException("Failed to read IV from file");
-            }
+        try (FileInputStream fis = new FileInputStream(file)) {
+            fis.read(iv);
         }
         return new IvParameterSpec(iv);
     }

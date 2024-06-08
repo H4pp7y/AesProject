@@ -56,18 +56,18 @@ public class MainController {
                     algorithm = "AES/CBC/PKCS5Padding"; // Значение по умолчанию
                 }
 
-                // Генерация ключа
                 SecretKey key = AESUtil.getKeyFromPassword(keyStr, "12345678");
-
-                // Генерация IV, если требуется
                 IvParameterSpec iv;
+
                 if (isEncryption) {
                     iv = AESUtil.generateIv();
+                    // Сохранение IV в отдельный файл
+                    AESUtil.saveIvToFile(iv, new File(file.getParent(), file.getName() + ".iv"));
                 } else {
-                    iv = AESUtil.getIvFromFile(file);
+                    // Извлечение IV из отдельного файла
+                    iv = AESUtil.getIvFromFile(new File(file.getParent(), file.getName() + ".iv"));
                 }
 
-                // Процесс шифрования или дешифрования файла
                 fileProcessor.processFile(file, isEncryption, new AESUtil(), algorithm, key, iv);
 
                 outputArea.setText("Operation completed on file: " + file.getName());
