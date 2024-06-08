@@ -1,7 +1,9 @@
 package com.example.aeskursach;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 
 import javax.crypto.SecretKey;
@@ -29,7 +31,7 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        fileProcessor = new FileProcessor(4);
+        fileProcessor = new FileProcessor(4); // Инициализация FileProcessor с 4 потоками
     }
 
     @FXML
@@ -49,10 +51,25 @@ public class MainController {
         if (file != null) {
             try {
                 String keyStr = keyField.getText();
-                String algorithm = algorithmField.getText();
+                String algorithm = algorithmField.getText().trim();
+                if (algorithm.isEmpty()) {
+                    algorithm = "AES/CBC/PKCS5Padding"; // Значение по умолчанию
+                }
+
+                // Генерация ключа
                 SecretKey key = AESUtil.getKeyFromPassword(keyStr, "12345678");
-                IvParameterSpec iv = AESUtil.generateIv();
+
+                // Генерация IV, если требуется
+                IvParameterSpec iv;
+                if (isEncryption) {
+                    iv = AESUtil.generateIv();
+                } else {
+                    iv = AESUtil.getIvFromFile(file);
+                }
+
+                // Процесс шифрования или дешифрования файла
                 fileProcessor.processFile(file, isEncryption, new AESUtil(), algorithm, key, iv);
+
                 outputArea.setText("Operation completed on file: " + file.getName());
             } catch (Exception e) {
                 outputArea.setText("Error: " + e.getMessage());
@@ -60,5 +77,3 @@ public class MainController {
         }
     }
 }
-
-
