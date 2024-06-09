@@ -83,15 +83,17 @@ public class MainController {
                 }
 
                 SecretKey key = SecureKeyStorage.loadSecretKey();
-                IvParameterSpec iv;
+                IvParameterSpec iv = null;
 
-                if (isEncryption) {
-                    iv = AESUtil.generateIv();
-                    // Сохранение IV в отдельный файл
-                    AESUtil.saveIvToFile(iv, new File(file.getParent(), file.getName() + ".iv"));
-                } else {
-                    // Извлечение IV из отдельного файла
-                    iv = AESUtil.getIvFromFile(new File(file.getParent(), file.getName() + ".iv"));
+                if (!algorithm.contains("ECB")) {
+                    if (isEncryption) {
+                        iv = AESUtil.generateIv();
+                        // Сохранение IV в отдельный файл
+                        AESUtil.saveIvToFile(iv, new File(file.getParent(), file.getName() + ".iv"));
+                    } else {
+                        // Извлечение IV из отдельного файла
+                        iv = AESUtil.getIvFromFile(new File(file.getParent(), file.getName() + ".iv"));
+                    }
                 }
 
                 fileProcessor.processFile(file, isEncryption, new AESUtil(), algorithm, key, iv);
@@ -103,3 +105,4 @@ public class MainController {
         }
     }
 }
+

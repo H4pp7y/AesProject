@@ -3,6 +3,7 @@ package com.example.aeskursach;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
@@ -15,6 +16,7 @@ import java.util.Base64;
 public class AESUtil {
 
     private static final String ALGORITHM = "AES";
+    private static final int GCM_TAG_LENGTH = 16 * 8; // 16 bytes
 
     public SecretKey generateKey(int n) throws NoSuchAlgorithmException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM);
@@ -35,13 +37,25 @@ public class AESUtil {
 
     public byte[] encrypt(byte[] input, SecretKey key, AlgorithmParameterSpec iv, String algorithm) throws Exception {
         Cipher cipher = Cipher.getInstance(algorithm);
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        if (algorithm.contains("GCM")) {
+            cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(GCM_TAG_LENGTH, ((IvParameterSpec) iv).getIV()));
+        } else if (algorithm.contains("ECB")) {
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+        } else {
+            cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+        }
         return cipher.doFinal(input);
     }
 
     public byte[] decrypt(byte[] input, SecretKey key, AlgorithmParameterSpec iv, String algorithm) throws Exception {
         Cipher cipher = Cipher.getInstance(algorithm);
-        cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        if (algorithm.contains("GCM")) {
+            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(GCM_TAG_LENGTH, ((IvParameterSpec) iv).getIV()));
+        } else if (algorithm.contains("ECB")) {
+            cipher.init(Cipher.DECRYPT_MODE, key);
+        } else {
+            cipher.init(Cipher.DECRYPT_MODE, key, iv);
+        }
         return cipher.doFinal(input);
     }
 
