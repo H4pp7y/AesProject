@@ -10,6 +10,7 @@
     <children>
         <TextField fx:id="keyField" promptText="Enter AES Key"/>
         <TextField fx:id="algorithmField" promptText="Enter Algorithm (e.g., AES/CBC/PKCS5Padding)"/>
+        <Button fx:id="generateKeyButton" text="Generate and Save Key" onAction="#onGenerateAndSaveKey"/>
         <Button fx:id="encryptButton" text="Encrypt" onAction="#onEncrypt"/>
         <Button fx:id="decryptButton" text="Decrypt" onAction="#onDecrypt"/>
         <TextArea fx:id="outputArea" prefHeight="200.0" prefWidth="300.0"/>

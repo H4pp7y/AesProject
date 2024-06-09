@@ -73,5 +73,3 @@ public class AESUtil {
         return new IvParameterSpec(iv);
     }
 }
-
-
