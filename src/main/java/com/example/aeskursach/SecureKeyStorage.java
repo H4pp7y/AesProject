@@ -12,10 +12,12 @@ import java.util.Base64;
 
 public class SecureKeyStorage {
 
-    private static final String ALGORITHM = "AES";
-    private static final String TRANSFORMATION = "AES/ECB/PKCS5Padding";
-    public static final String KEY_FILE = "secretKey.enc";
-    private static final String MASTER_KEY = "MyMasterKey12345"; // 16-char password
+    // Константы настройки
+    private static final String ALGORITHM = "AES"; // Алгоритм шифрования
+    private static final String TRANSFORMATION = "AES/ECB/PKCS5Padding"; // Режим работы и заполнения
+    public static final String KEY_FILE = "secretKey.enc"; // Файл для хранения зашифрованного ключа
+    private static final String MASTER_KEY = "MyMasterKey12345"; // Мастер-ключ для шифрования и дешифрования ключей
+
 
     // Шифрование и сохранение ключа
     public static void saveSecretKey(SecretKey secretKey) throws Exception {
