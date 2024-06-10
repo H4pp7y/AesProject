@@ -5,6 +5,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -31,14 +32,61 @@ public class MainController {
     @FXML
     private Button decryptButton;
 
+    @FXML
+    private Button loadFileButton;
+
+    @FXML
+    private Button saveFileButton;
+
     private FileProcessor fileProcessor;
+    private File selectedFile;
 
     @FXML
     public void initialize() {
         fileProcessor = new FileProcessor(4); // Инициализация FileProcessor с 4 потоками
+        setupButtons();
     }
 
-    @FXML
+    private void setupButtons() {
+        generateKeyButton.setOnAction(event -> onGenerateAndSaveKey());
+        encryptButton.setOnAction(event -> onEncrypt());
+        decryptButton.setOnAction(event -> onDecrypt());
+        loadFileButton.setOnAction(event -> onLoadFile());
+        saveFileButton.setOnAction(event -> onSaveFile());
+    }
+
+    private void onLoadFile() {
+        FileChooser fileChooser = new FileChooser();
+        selectedFile = fileChooser.showOpenDialog(new Stage());
+
+        if (selectedFile != null) {
+            outputArea.setText("File loaded: " + selectedFile.getName());
+        } else {
+            outputArea.setText("File loading cancelled.");
+        }
+    }
+
+    private void onSaveFile() {
+        if (selectedFile != null) {
+            FileChooser fileChooser = new FileChooser();
+            File saveFile = fileChooser.showSaveDialog(new Stage());
+
+            if (saveFile != null) {
+                try {
+                    byte[] fileData = AESUtil.readFile(selectedFile);
+                    AESUtil.writeFile(saveFile, fileData);
+                    outputArea.setText("File saved: " + saveFile.getName());
+                } catch (Exception e) {
+                    outputArea.setText("Error saving file: " + e.getMessage());
+                }
+            } else {
+                outputArea.setText("File saving cancelled.");
+            }
+        } else {
+            outputArea.setText("No file loaded to save.");
+        }
+    }
+
     private void onGenerateAndSaveKey() {
         try {
             // Генерация нового ключа
@@ -56,20 +104,37 @@ public class MainController {
     }
 
     @FXML
+    private void onChooseFile() {
+        FileChooser fileChooser = new FileChooser();
+        selectedFile = fileChooser.showOpenDialog(null);
+
+        if (selectedFile != null) {
+            outputArea.setText("Selected file: " + selectedFile.getName());
+        } else {
+            outputArea.setText("No file selected.");
+        }
+    }
+
+    @FXML
     private void onEncrypt() {
-        processFile(true);
+        if (selectedFile != null) {
+            processFile(true);
+        } else {
+            outputArea.setText("No file selected.");
+        }
     }
 
     @FXML
     private void onDecrypt() {
-        processFile(false);
+        if (selectedFile != null) {
+            processFile(false);
+        } else {
+            outputArea.setText("No file selected.");
+        }
     }
 
     private void processFile(boolean isEncryption) {
-        FileChooser fileChooser = new FileChooser();
-        File file = fileChooser.showOpenDialog(null);
-
-        if (file != null) {
+        if (selectedFile != null) {
             try {
                 String algorithm = algorithmField.getText().trim();
                 if (algorithm.isEmpty()) {
@@ -83,26 +148,29 @@ public class MainController {
                 }
 
                 SecretKey key = SecureKeyStorage.loadSecretKey();
-                IvParameterSpec iv = null;
+                IvParameterSpec iv;
 
-                if (!algorithm.contains("ECB")) {
-                    if (isEncryption) {
-                        iv = AESUtil.generateIv();
-                        // Сохранение IV в отдельный файл
-                        AESUtil.saveIvToFile(iv, new File(file.getParent(), file.getName() + ".iv"));
-                    } else {
-                        // Извлечение IV из отдельного файла
-                        iv = AESUtil.getIvFromFile(new File(file.getParent(), file.getName() + ".iv"));
-                    }
+                if (isEncryption) {
+                    iv = AESUtil.generateIv();
+                    // Сохранение IV в отдельный файл
+                    AESUtil.saveIvToFile(iv, new File(selectedFile.getParent(), selectedFile.getName() + ".iv"));
+                } else {
+                    // Извлечение IV из отдельного файла
+                    iv = AESUtil.getIvFromFile(new File(selectedFile.getParent(), selectedFile.getName() + ".iv"));
                 }
 
-                fileProcessor.processFile(file, isEncryption, new AESUtil(), algorithm, key, iv);
+                fileProcessor.processFile(selectedFile, isEncryption, new AESUtil(), algorithm, key, iv);
 
-                outputArea.setText("Operation completed on file: " + file.getName());
+                if (isEncryption) {
+                    outputArea.setText("File encrypted successfully: " + selectedFile.getName());
+                } else {
+                    outputArea.setText("File decrypted successfully: " + selectedFile.getName());
+                }
             } catch (Exception e) {
                 outputArea.setText("Error: " + e.getMessage());
             }
+        } else {
+            outputArea.setText("No file selected.");
         }
     }
 }
-

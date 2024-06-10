@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.aeskursach.MainController">
-    <children>
-        <TextField fx:id="keyField" promptText="Enter AES Key"/>
-        <TextField fx:id="algorithmField" promptText="Enter Algorithm (e.g., AES/CBC/PKCS5Padding)"/>
-        <Button fx:id="generateKeyButton" text="Generate and Save Key" onAction="#onGenerateAndSaveKey"/>
-        <Button fx:id="encryptButton" text="Encrypt" onAction="#onEncrypt"/>
-        <Button fx:id="decryptButton" text="Decrypt" onAction="#onDecrypt"/>
-        <TextArea fx:id="outputArea" prefHeight="200.0" prefWidth="300.0"/>
-    </children>
+<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.aeskursach.MainController" spacing="10" alignment="CENTER">
+    <TextField fx:id="algorithmField" promptText="Enter AES algorithm (e.g., AES/CBC/PKCS5Padding)" />
+    <TextField fx:id="keyField" promptText="Enter key" />
+    <Button fx:id="generateKeyButton" text="Generate and Save Key" />
+    <Button fx:id="loadFileButton" text="Load File" />
+    <Button fx:id="encryptButton" text="Encrypt File" />
+    <Button fx:id="decryptButton" text="Decrypt File" />
+    <Button fx:id="saveFileButton" text="Save File" />
+    <TextArea fx:id="outputArea" prefHeight="200" prefWidth="300" />
 </VBox>
